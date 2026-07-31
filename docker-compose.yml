@@ -15,7 +15,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: aakansha28/hoofmarket-scraper:v3
+    image: aakansha28/hoofmarket-scraper_bubble-sync:v3  
     container_name: hoofmarket_scraper
     restart: unless-stopped
 
