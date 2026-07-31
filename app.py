@@ -1,7 +1,7 @@
 """
 HoofMarketIQ — FastAPI REST API
 Starts scraper immediately on server boot, then repeats on the configured
-production interval (default: every 6 h, override via SCRAPE_INTERVAL_HOURS).
+production interval (default: every 8 h, override via SCRAPE_INTERVAL_HOURS).
 
 Usage:
     uvicorn app:app --host 0.0.0.0 --port 8010
@@ -20,11 +20,10 @@ from apscheduler.triggers.interval import IntervalTrigger
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-import os
-
-SCRAPE_INTERVAL_HOURS = int(
-    os.getenv("SCRAPE_INTERVAL_HOURS", "6")
-)
+# Single source of truth for the interval — config.base reads the env var
+# (with an 8h production default / 0.5h testing default). Importing it
+# here keeps main.py and app.py in sync.
+from config.base import SCRAPE_INTERVAL_HOURS
 
 # ── Logging ───────────────────────────────────────────────────
 logging.basicConfig(
