@@ -2,11 +2,33 @@
 # HoofMarketIQ — config/sites/wildlifebuyer.py
 # All WildlifeBuyer.com-specific settings
 # ============================================================
+import os
 
 SITE_ID   = "wildlifebuyer"
 BASE_URL  = "https://wildlifebuyer.com"
 ENABLED   = True
 IMAGE_CDN = "wildlifebuyerimages.blob.core.windows.net"
+
+# ── Proxy for WildlifeBuyer ────────────────────────────────────
+# Cloudflare blocks direct requests from this server's IP.
+# A rotating/forward proxy is used so WildlifeBuyer requests
+# originate from a different IP. Other sites (bucktrader,
+# onlinehuntingauctions) do NOT use this proxy.
+#
+# Override at deploy-time via the WILDLIFEBUYER_PROXY_URL env var
+# (e.g. in your process manager, systemd unit, or .env file).
+WILDLIFEBUYER_PROXY_URL = os.getenv(
+    "WILDLIFEBUYER_PROXY_URL",
+    "http://shpsfbko:hdalrep0qjma@31.56.127.193:7684",
+)
+
+# httpx 0.27 accepts a dict keyed by URL scheme.
+# Same upstream proxy is used for both http:// and https:// because
+# the proxy supports CONNECT (verified via curl).
+WILDLIFEBUYER_PROXY = {
+    "http://":  WILDLIFEBUYER_PROXY_URL,
+    "https://": WILDLIFEBUYER_PROXY_URL,
+}
 
 BROWSE_CATEGORIES = [
     {"name": "Exotics & Deer",  "url": "/Browse/C160535/Exotics-Deer",  "scrape": True},

@@ -28,18 +28,23 @@ async def run_all_scrapers() -> int:
 
     Returns total listings scraped. The enriched listing dicts are
     passed directly to bubble_sync so there is NO double-scraping.
+
+    A separate httpx client is created per site so that site-specific
+    proxy settings (e.g. WILDLIFEBUYER_PROXY) are applied only to the
+    site that needs them.
     """
     all_listings = []
     total_scraped = 0
 
-    async with make_httpx_client() as client:
-        for scraper in SCRAPERS:
-            site = scraper.source_site
-            logger.info(f"━━━ Scraper: {site} ━━━")
+    for scraper in SCRAPERS:
+        site = scraper.source_site
+        logger.info(f"━━━ Scraper: {site} ━━━")
+        # Per-site client: wildlifebuyer gets the proxy, others do not.
+        async with make_httpx_client(site_id=site) as client:
             listings, count = await _run_one(scraper, client)
-            all_listings.extend(listings)
-            logger.info(f"[{site}] scraped={count}")
-            total_scraped += count
+        all_listings.extend(listings)
+        logger.info(f"[{site}] scraped={count}")
+        total_scraped += count
 
     logger.info(f"✅ All scrapers done — total scraped={total_scraped}")
 
