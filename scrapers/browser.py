@@ -53,7 +53,7 @@ async def fetch_page(url: str, client: httpx.AsyncClient, retries: int = 2) -> s
     await _rate_limit()
     for attempt in range(1, retries + 1):
         try:
-            r = await client.get(url, headers=HEADERS, timeout=20, follow_redirects=True)
+            r = await client.get(url, headers=HEADERS, timeout=30, follow_redirects=True)
             if r.status_code != 200:
                 logger.warning(f"  ⚠️  HTTP {r.status_code}: {url}")
             elif _is_valid_html(r.text, url):
@@ -67,10 +67,31 @@ async def fetch_page(url: str, client: httpx.AsyncClient, retries: int = 2) -> s
     return None
 
 
-def make_httpx_client() -> httpx.AsyncClient:
+def make_httpx_client(site_id: str | None = None) -> httpx.AsyncClient:
+    """Build an httpx.AsyncClient.
+
+    When `site_id == "wildlifebuyer"`, the request is routed through the
+    WildlifeBuyer proxy (see config/sites/wildlifebuyer.py). Other sites
+    get a direct client — only WildlifeBuyer is behind Cloudflare and
+    needs the proxy.
+
+    Uses the `proxy=` parameter (single URL string) which is supported
+    by both httpx 0.27 (where `proxies=` is deprecated) and 0.28+
+    (where `proxies=` is removed). The same upstream proxy handles both
+    http:// and https:// because the proxy supports CONNECT.
+    """
+    proxy_url = None
+    if site_id == "wildlifebuyer":
+        # Imported lazily so other sites never pay the import cost and
+        # so a missing wildlifebuyer config does not break them.
+        from config.sites.wildlifebuyer import WILDLIFEBUYER_PROXY_URL
+        proxy_url = WILDLIFEBUYER_PROXY_URL
+        logger.info(f"  🛰️  Using WILDLIFEBUYER proxy for client (site={site_id})")
+
     return httpx.AsyncClient(
         headers=HEADERS,
-        timeout=httpx.Timeout(20.0),
+        timeout=httpx.Timeout(30.0),
         limits=httpx.Limits(max_connections=5, max_keepalive_connections=3),
         follow_redirects=True,
+        proxy=proxy_url,
     )

@@ -149,7 +149,7 @@ Additional fields are generated automatically:
 
 ## Reliability Features
 
-* Shared `httpx.AsyncClient`
+* Per-site `httpx.AsyncClient` (WildlifeBuyer uses a forward proxy; other sites are direct)
 * Request retry with exponential backoff
 * Randomized request delays
 * Bot-block detection

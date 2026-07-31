@@ -10,18 +10,18 @@ load_dotenv()
 
 # ── Run mode ──────────────────────────────────────────────────
 # True  → scheduler every 30 min (testing/local)
-# False → scheduler every 24 h  (production / CI)
+# False → scheduler every 8 h   (production)
 # CI sets TESTING_MODE=false via workflow env
 TESTING_MODE = os.getenv("TESTING_MODE", "true").lower() != "false"
 # ── Scrape interval ────────────────────────────────────────────
-# SCRAPE_INTERVAL_HOURS env var takes precedence if explicitly set
-# (e.g. Dockerfile default of 6). Otherwise fall back based on TESTING_MODE.
+# SCRAPE_INTERVAL_HOURS env var takes precedence if explicitly set.
+# Otherwise fall back to 8h in production, 0.5h (30 min) in testing.
 if os.getenv("SCRAPE_INTERVAL_HOURS") is not None:
     SCRAPE_INTERVAL_HOURS = float(os.getenv("SCRAPE_INTERVAL_HOURS"))
 elif TESTING_MODE:
     SCRAPE_INTERVAL_HOURS = 0.5  # 30 min
 else:
-    SCRAPE_INTERVAL_HOURS = 6
+    SCRAPE_INTERVAL_HOURS = 8    # production default
  
 # ── Scraper behavior ──────────────────────────────────────────
 RATE_LIMIT_MIN        = 5    # seconds between requests (min)

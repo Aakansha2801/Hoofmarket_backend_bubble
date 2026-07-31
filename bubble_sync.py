@@ -316,8 +316,9 @@ async def sync_to_bubble(listings: list | None = None):
         print("Scraping all sites for fresh listing data...")
         scraped_listings = []
 
-        async with make_httpx_client() as client:
-            for scraper in SCRAPERS:
+        # Per-site client: wildlifebuyer gets the proxy, others do not.
+        for scraper in SCRAPERS:
+            async with make_httpx_client(site_id=scraper.source_site) as client:
                 site_listings = await scrape_all_listings(scraper, client)
                 scraped_listings.extend(site_listings)
 
@@ -400,9 +401,10 @@ async def dry_run_test(sample_size=3):
     """
     print(f"=== DRY-RUN TEST: {sample_size} listings per site ===\n")
 
-    async with make_httpx_client() as client:
-        for scraper in SCRAPERS:
-            site = scraper.source_site
+    for scraper in SCRAPERS:
+        site = scraper.source_site
+        # Per-site client: wildlifebuyer gets the proxy, others do not.
+        async with make_httpx_client(site_id=site) as client:
             print(f"[{site}] Collecting browse cards...")
             cards = await scraper.collect_listing_urls(client)
             sample_cards = cards[:sample_size]
